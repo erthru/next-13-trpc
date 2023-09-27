@@ -1,9 +1,8 @@
-import { PrismaClient } from "@prisma/client";
+import { createContext } from "@/utils/trpc/context";
+import { appRouter } from "@/utils/trpc/routers";
 import { AuthOptions } from "next-auth";
 import NextAuth from "next-auth/next";
 import CredentialsProvider from "next-auth/providers/credentials";
-
-const prisma = new PrismaClient();
 
 export const authOptions: AuthOptions = {
   providers: [
@@ -16,11 +15,9 @@ export const authOptions: AuthOptions = {
       },
 
       async authorize(credentials, req) {
-        const user = await prisma.user.findUnique({
-          where: {
-            username: credentials?.username,
-            password: credentials?.password,
-          },
+        const user = await appRouter.createCaller(await createContext()).login({
+          username: credentials?.username!!,
+          password: credentials?.password!!,
         });
 
         if (!user) {

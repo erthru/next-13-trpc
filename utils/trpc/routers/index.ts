@@ -22,6 +22,26 @@ export const appRouter = router({
       return user;
     }),
 
+  login: publicProcedure
+    .input(
+      z.object({
+        username: z.string(),
+        password: z.string(),
+      })
+    )
+    .mutation(async ({ ctx, input }) => {
+      const { username, password } = input;
+
+      const user = await ctx.prisma.user.findUnique({
+        where: {
+          username,
+          password,
+        },
+      });
+
+      return user;
+    }),
+
   getAllTodos: protectedProcedure.query(async ({ ctx }) => {
     const todos = await ctx.prisma.todo.findMany({
       where: { userId: ctx.session?.user.id },
