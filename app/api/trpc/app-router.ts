@@ -1,13 +1,76 @@
 import { z } from "zod";
-import { publicProcedure, router } from "@/utils/trpc";
+import { protectedProcedure, publicProcedure, router } from "@/utils/trpc";
+import { TRPCError } from "@trpc/server";
 
 export const appRouter = router({
-  greetings: publicProcedure
+  register: publicProcedure
+    .input(
+      z.object({
+        username: z.string(),
+        password: z.string(),
+      })
+    )
+    .mutation(async ({ ctx, input }) => {
+      const { username, password } = input;
+
+      const user = await ctx.prisma.user.create({
+        data: {
+          username,
+          password,
+        },
+      });
+
+      return user;
+    }),
+
+  login: publicProcedure
+    .input(
+      z.object({
+        username: z.string(),
+        password: z.string(),
+      })
+    )
+    .mutation(async ({ ctx, input }) => {
+      const { username, password } = input;
+
+      const user = await ctx.prisma.user.findUnique({
+        where: {
+          username,
+          password,
+        },
+      });
+
+      if (!user) {
+        throw new TRPCError({
+          code: "NOT_FOUND",
+          message: "user not found",
+        });
+      }
+
+      return user;
+    }),
+
+  getAllTodos: protectedProcedure.query(async ({ ctx }) => {
+    const todos = await ctx.prisma.todo.findMany({
+      where: { userId: ctx.session.user.id },
+    });
+
+    return todos;
+  }),
+
+  createTodo: protectedProcedure
     .input(z.object({ name: z.string() }))
-    .query(({ input, ctx }) => {
+    .mutation(async ({ ctx, input }) => {
       const { name } = input;
-      const { userId } = ctx;
-      return `hello ${name} | ${userId}`;
+
+      const todo = await ctx.prisma.todo.create({
+        data: {
+          name,
+          userId: ctx.session.user.id,
+        },
+      });
+
+      return todo;
     }),
 });
 

@@ -1,12 +1,15 @@
-import { serverClient } from "@/utils/trpc/server-client";
+import { getServerSession } from "next-auth";
+import { redirect } from "next/navigation";
+import { authOptions } from "./api/auth/[...nextauth]/route";
+import IndexClient from "./client";
 
 const Index = async () => {
-  const data = await serverClient.greetings({ name: "erthru" });
+  const session = await getServerSession(authOptions);
 
-  return (
-    <>
-      <p>{data}</p>
-    </>
-  );
+  if (!session?.user) {
+    redirect("/login");
+  }
+
+  return <IndexClient session={session} />;
 };
 export default Index;
