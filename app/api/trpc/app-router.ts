@@ -6,7 +6,8 @@ export const appRouter = router({
     .input(z.object({ name: z.string() }))
     .query(({ input, ctx }) => {
       const { name } = input;
-      return `hello ${name}`;
+      const { userId } = ctx;
+      return `hello ${name} | ${userId}`;
     }),
 });
 
