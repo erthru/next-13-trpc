@@ -1,7 +1,9 @@
-import { serverClient } from "@/utils/trpc/server-client";
+import { PrismaClient } from "@prisma/client";
 import { AuthOptions } from "next-auth";
 import NextAuth from "next-auth/next";
 import CredentialsProvider from "next-auth/providers/credentials";
+
+const prisma = new PrismaClient();
 
 export const authOptions: AuthOptions = {
   providers: [
@@ -14,16 +16,18 @@ export const authOptions: AuthOptions = {
       },
 
       async authorize(credentials, req) {
-        try {
-          const user = await serverClient.login({
-            username: credentials?.username!!,
-            password: credentials?.password!!,
-          });
+        const user = await prisma.user.findUnique({
+          where: {
+            username: credentials?.username,
+            password: credentials?.password,
+          },
+        });
 
-          return user;
-        } catch (err: any) {
+        if (!user) {
           return null as any;
         }
+
+        return user;
       },
     }),
   ],
