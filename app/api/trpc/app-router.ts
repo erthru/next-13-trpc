@@ -4,7 +4,7 @@ import { publicProcedure, router } from "@/utils/trpc";
 export const appRouter = router({
   greetings: publicProcedure
     .input(z.object({ name: z.string() }))
-    .query(({ input }) => {
+    .query(({ input, ctx }) => {
       const { name } = input;
       return `hello ${name}`;
     }),
